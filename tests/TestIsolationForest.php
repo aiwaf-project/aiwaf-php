@@ -7,9 +7,10 @@
  *   This removes rare flakiness from score jitter.
  */
 
-require_once __DIR__ . '/../src/IsolationForest.php';
+require_once __DIR__ . '/../vendor/autoload.php';
 
 use PHPUnit\Framework\TestCase;
+use AIWAF\IsolationForest;
 
 class TestIsolationForest extends TestCase
 {

@@ -4,9 +4,7 @@ declare(strict_types=1);
 // Pull in PHPUnit
 use PHPUnit\Framework\TestCase;
 
-// Make sure we can load our classes
-require_once __DIR__ . '/../src/Logger.php';
-require_once __DIR__ . '/../src/IsolationForest.php';
+require_once __DIR__ . '/../vendor/autoload.php';
 
 use AIWAF\Logger;
 use AIWAF\IsolationForest;

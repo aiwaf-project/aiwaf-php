@@ -1,7 +1,8 @@
 <?php
-require_once __DIR__ . '/../src/HoneypotChecker.php';
+require_once __DIR__ . '/../vendor/autoload.php';
 
 use PHPUnit\Framework\TestCase;
+use AIWAF\HoneypotChecker;
 
 class TestHoneypotChecker extends TestCase
 {

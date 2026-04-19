@@ -1,6 +1,9 @@
 <?php
 namespace AIWAF;
 
+use AIWAF\Core\Exemptions;
+use AIWAF\Core\RuntimeUtils;
+
 class Utils
 {
     public static function loadJson(string $path): array
@@ -26,24 +29,12 @@ class Utils
 
     public static function isExemptPath(string $path, array $exemptPaths): bool
     {
-        foreach ($exemptPaths as $pattern) {
-            if (strpos($path, $pattern) === 0) {
-                return true;
-            }
-        }
-        return false;
+        return Exemptions::isPathExempt($path, $exemptPaths, true, true);
     }
 
     public static function getClientIp(): string
     {
-        if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
-            return $_SERVER['HTTP_CLIENT_IP'];
-        }
-        if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-            $ips = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
-            return trim($ips[0]);
-        }
-        return $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+        return RuntimeUtils::getIpFromHeaders($_SERVER);
     }
 
     public static function saveBlockedIps(array $blockedIps): void
@@ -63,8 +54,6 @@ class Utils
 
     public static function getRequestPath(): string
     {
-        $uri = $_SERVER['REQUEST_URI'] ?? '/';
-        $queryPos = strpos($uri, '?');
-        return $queryPos !== false ? substr($uri, 0, $queryPos) : $uri;
+        return RuntimeUtils::getRequestPath($_SERVER);
     }
 }

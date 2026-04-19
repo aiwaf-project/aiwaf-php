@@ -35,9 +35,40 @@ class Logger
     /** Append one feature vector */
     public static function log(array $vector): void
     {
-        $fh = fopen(self::path(), 'a');
-        fputcsv($fh, $vector);
+        $path = self::path();
+        $dir = dirname($path);
+        if (!is_dir($dir)) {
+            mkdir($dir, 0777, true);
+        }
+
+        $fh = fopen($path, 'a');
+        if ($fh === false) {
+            throw new \RuntimeException('Unable to open log file: ' . $path);
+        }
+
+        // Pass explicit escape char to avoid PHP 8.4 fputcsv deprecation warnings.
+        fputcsv($fh, $vector, ',', '"', '\\');
         fclose($fh);
+    }
+
+    /** Build and append features from current request globals. */
+    public static function logRequest(): void
+    {
+        $path = Utils::getRequestPath();
+        $status = isset($_SERVER['REDIRECT_STATUS']) ? (string) $_SERVER['REDIRECT_STATUS'] : '200';
+
+        $vector = [
+            strlen($path),
+            DynamicKeywordManager::detect($path),
+            0.5,
+            in_array((int) $status, [404, 500], true) ? 1 : 0,
+            0,
+            0,
+            isset($_POST['aiwaf_honeytrap']) ? 1 : 0,
+            UUIDTamperProtector::isSuspicious($path) ? 1 : 0,
+        ];
+
+        self::log($vector);
     }
 
     /** Load all rows */
@@ -47,9 +78,21 @@ class Logger
         if (!file_exists($file)) {
             return [];
         }
-        return array_map(
-            fn($r) => array_map('floatval', $r),
-            array_map('str_getcsv', file($file, FILE_IGNORE_NEW_LINES))
-        );
+
+        $lines = file($file, FILE_IGNORE_NEW_LINES);
+        if (!is_array($lines)) {
+            return [];
+        }
+
+        $rows = [];
+        foreach ($lines as $line) {
+            $row = str_getcsv((string) $line, ',', '"', '\\');
+            if (!is_array($row)) {
+                continue;
+            }
+            $rows[] = array_map('floatval', $row);
+        }
+
+        return $rows;
     }
 }

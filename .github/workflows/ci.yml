@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  unit-matrix:
+    name: Unit Tests (PHP ${{ matrix.php }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ["7.4", "8.0", "8.1", "8.2", "8.3", "8.4"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+          tools: composer:v2
+
+      - name: Validate composer
+        run: php composer.phar validate --no-check-publish
+
+      - name: Install dependencies
+        run: php composer.phar install --no-interaction --prefer-dist --no-progress
+
+      - name: Packaging smoke (setup script)
+        run: php setup.php
+
+      - name: CLI smoke
+        run: php cli/detect_and_train.php
+
+      - name: PHPUnit
+        run: php vendor/bin/phpunit --colors=never --do-not-cache-result
+
+  adapter-matrix:
+    name: Adapter Matrix (Docker)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          coverage: none
+
+      - name: Run adapter matrix tests
+        run: php tools/test-adapters-matrix.php --retries=3

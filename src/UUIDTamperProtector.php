@@ -1,4 +1,6 @@
 <?php
+namespace AIWAF;
+
 class UUIDTamperProtector
 {
     public static function isSuspicious(string $path): bool

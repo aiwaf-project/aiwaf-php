@@ -1,0 +1,89 @@
+services:
+  aiwaf-laravel-php81:
+    build:
+      context: ../..
+      dockerfile: examples/sandbox/aiwaf-laravel/Dockerfile
+    ports:
+      - "8081:8081"
+    environment:
+      TARGET_BASE_URL: http://juice:3000
+      PORT: 8081
+      AIWAF_ACCESS_LOG: /workspace/resources/access.log
+      AIWAF_MIN_AI_LOGS: "10000"
+      AIWAF_DISABLE_AI: "true"
+    depends_on:
+      juice:
+        condition: service_started
+    volumes:
+      - aiwaf_resources:/workspace/resources
+
+  aiwaf-symfony-php82:
+    build:
+      context: ../..
+      dockerfile: examples/sandbox/aiwaf-symfony/Dockerfile
+    ports:
+      - "8082:8082"
+    environment:
+      TARGET_BASE_URL: http://juice:3000
+      PORT: 8082
+      AIWAF_ACCESS_LOG: /workspace/resources/access.log
+      AIWAF_MIN_AI_LOGS: "10000"
+      AIWAF_DISABLE_AI: "true"
+    depends_on:
+      juice:
+        condition: service_started
+    volumes:
+      - aiwaf_resources:/workspace/resources
+
+  aiwaf-wordpress-php80:
+    build:
+      context: ../..
+      dockerfile: examples/sandbox/aiwaf-wordpress/Dockerfile
+    ports:
+      - "8083:8083"
+    environment:
+      TARGET_BASE_URL: http://juice:3000
+      PORT: 8083
+      AIWAF_ACCESS_LOG: /workspace/resources/access.log
+      AIWAF_MIN_AI_LOGS: "10000"
+      AIWAF_DISABLE_AI: "true"
+    depends_on:
+      juice:
+        condition: service_started
+    volumes:
+      - aiwaf_resources:/workspace/resources
+
+  aiwaf-trainer:
+    build:
+      context: ../..
+      dockerfile: examples/sandbox/aiwaf-trainer/Dockerfile
+    environment:
+      AIWAF_ACCESS_LOG: /workspace/resources/access.log
+      AIWAF_MIN_AI_LOGS: "50"
+    volumes:
+      - aiwaf_resources:/workspace/resources
+    profiles:
+      - trainer
+
+  aiwaf-tests:
+    build:
+      context: ../..
+      dockerfile: examples/sandbox/aiwaf-tests/Dockerfile
+    volumes:
+      - aiwaf_resources:/workspace/resources
+    profiles:
+      - tests
+
+  juice:
+    image: bkimminich/juice-shop
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000', r => process.exit(r.statusCode >= 200 && r.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+volumes:
+  aiwaf_resources:

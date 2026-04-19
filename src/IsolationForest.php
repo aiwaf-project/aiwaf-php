@@ -117,7 +117,37 @@ class IsolationForest
 
     public function saveModel(string $path): void
     {
-        file_put_contents($path, json_encode($this->trees, JSON_PRETTY_PRINT));
+        $dir = dirname($path);
+        if (!is_dir($dir)) {
+            mkdir($dir, 0777, true);
+        }
+
+        $lockPath = $path . '.lock';
+        $lock = fopen($lockPath, 'c');
+        if ($lock === false) {
+            throw new \RuntimeException('Unable to open model lock file: ' . $lockPath);
+        }
+
+        try {
+            if (!flock($lock, LOCK_EX)) {
+                throw new \RuntimeException('Unable to lock model file: ' . $path);
+            }
+
+            $tmp = $path . '.' . uniqid('tmp_', true);
+            $payload = json_encode($this->trees, JSON_PRETTY_PRINT);
+            if (file_put_contents($tmp, $payload) === false) {
+                @unlink($tmp);
+                throw new \RuntimeException('Unable to write model temp file: ' . $tmp);
+            }
+
+            if (!@rename($tmp, $path)) {
+                @unlink($tmp);
+                throw new \RuntimeException('Unable to replace model file: ' . $path);
+            }
+        } finally {
+            flock($lock, LOCK_UN);
+            fclose($lock);
+        }
     }
 
     public function loadModel(string $path): void

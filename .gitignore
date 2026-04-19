@@ -20,7 +20,14 @@ Thumbs.db
 
 # Logs / runtime
 resources/*.json      # remove if you *want* model + blocked_ips in Git
+resources/*.csv       # request/training feature logs
+resources/*.lock      # lock files for atomic writes
+resources/*.tmp*      # transient temp files
 *.log
+
+# Sandbox generated validation artifacts
+examples/sandbox/results_*.json
+examples/sandbox/comparison_modes_*.json
 
 # Build / phar / packaging
 /build/
@@ -28,3 +35,4 @@ resources/*.json      # remove if you *want* model + blocked_ips in Git
 
 # PHPUnit temporary model files (from tests)
 resources/test_*.json
+resources/test_*.csv

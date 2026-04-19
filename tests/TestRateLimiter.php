@@ -1,15 +1,10 @@
 <?php
 declare(strict_types=1);
 
-// 1) Interface must be defined before the driver
-require_once __DIR__ . '/../src/RateLimit/DriverInterface.php';
-// 2) Then load the driver
-require_once __DIR__ . '/../src/RateLimit/InMemoryDriver.php';
-// 3) Then load Config and RateLimiter
-require_once __DIR__ . '/../src/Config.php';
-require_once __DIR__ . '/../src/RateLimiter.php';
+require_once __DIR__ . '/../vendor/autoload.php';
 
 use PHPUnit\Framework\TestCase;
+use AIWAF\Adapters\InMemoryAdapter;
 use AIWAF\Config;
 use AIWAF\RateLimiter;
 use AIWAF\RateLimit\InMemoryDriver;
@@ -39,5 +34,26 @@ class TestRateLimiter extends TestCase
             RateLimiter::check($ip),
             'Request exceeding the limit SHOULD trigger rate limiting'
         );
+    }
+
+    public function testRateLimiterViaAdapter(): void
+    {
+        RateLimiter::initAdapter(new InMemoryAdapter());
+
+        $ip = '127.0.0.2';
+        for ($i = 1; $i <= Config::$rateLimitPerMinute; $i++) {
+            $this->assertFalse(RateLimiter::check($ip));
+        }
+        $this->assertTrue(RateLimiter::check($ip));
+    }
+
+    public function testRateLimiterRespectsCustomLimits(): void
+    {
+        RateLimiter::init(new InMemoryDriver());
+
+        $ip = '127.0.0.3';
+        $this->assertFalse(RateLimiter::check($ip, 2, 120));
+        $this->assertFalse(RateLimiter::check($ip, 2, 120));
+        $this->assertTrue(RateLimiter::check($ip, 2, 120));
     }
 }
