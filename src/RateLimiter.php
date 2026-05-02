@@ -20,6 +20,11 @@ class RateLimiter
         self::$driver = $adapter->createDriver();
     }
 
+    public static function hasDriver(): bool
+    {
+        return self::$driver !== null;
+    }
+
     public static function check(string $ip, ?int $maxRequests = null, ?int $windowSeconds = null): bool
     {
         if (self::$driver === null) {

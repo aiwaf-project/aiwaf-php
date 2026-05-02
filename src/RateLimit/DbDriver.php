@@ -13,13 +13,22 @@ class DbDriver implements DriverInterface
     public function increment(string $ip, int $periodSeconds): int
     {
         $period = gmdate('YmdHi');
-        $sql = "
-            INSERT INTO ratelimit (ip, period, cnt)
-            VALUES (:ip, :period, 1)
-            ON DUPLICATE KEY UPDATE cnt = cnt + 1
-        ";
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute(['ip' => $ip, 'period' => $period]);
+        $driver = strtolower((string) $this->pdo->getAttribute(\PDO::ATTR_DRIVER_NAME));
+        if ($driver === 'sqlite') {
+            $stmt = $this->pdo->prepare(
+                "INSERT INTO ratelimit (ip, period, cnt)
+                 VALUES (:ip, :period, 1)
+                 ON CONFLICT(ip, period) DO UPDATE SET cnt = cnt + 1"
+            );
+            $stmt->execute(['ip' => $ip, 'period' => $period]);
+        } else {
+            $stmt = $this->pdo->prepare(
+                "INSERT INTO ratelimit (ip, period, cnt)
+                 VALUES (:ip, :period, 1)
+                 ON DUPLICATE KEY UPDATE cnt = cnt + 1"
+            );
+            $stmt->execute(['ip' => $ip, 'period' => $period]);
+        }
 
         $stmt = $this->pdo->prepare(
             "SELECT cnt FROM ratelimit WHERE ip = :ip AND period = :period"

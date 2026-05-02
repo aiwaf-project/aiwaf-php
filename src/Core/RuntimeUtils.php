@@ -13,8 +13,45 @@ final class RuntimeUtils
         if (!self::isValidIp($ip)) {
             return false;
         }
+        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+            if ($ip === '127.0.0.1') {
+                return true;
+            }
 
-        return !filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE);
+            if (strpos($ip, '10.') === 0 || strpos($ip, '192.168.') === 0) {
+                return true;
+            }
+
+            if (preg_match('/^172\.(\d+)\./', $ip, $m) === 1) {
+                $octet = (int) ($m[1] ?? -1);
+                if ($octet >= 16 && $octet <= 31) {
+                    return true;
+                }
+            }
+
+            if (strpos($ip, '169.254.') === 0) {
+                return true;
+            }
+
+            return false;
+        }
+
+        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+            $lower = strtolower($ip);
+            if ($lower === '::1') {
+                return true;
+            }
+
+            if (strpos($lower, 'fe80:') === 0) {
+                return true;
+            }
+
+            if (strpos($lower, 'fc') === 0 || strpos($lower, 'fd') === 0) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public static function getIpFromHeaders(array $server): string

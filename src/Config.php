@@ -21,17 +21,21 @@ class Config
 
     public static function toRuntimeConfig(): RuntimeConfig
     {
-        return new RuntimeConfig([
-            'exempt_paths' => self::$exemptPaths,
-            'known_paths' => self::$knownPaths,
-            'rate_limit_per_minute' => self::$rateLimitPerMinute,
-            'keyword_detection_threshold' => self::$keywordDetectionThreshold,
-            'uuid_tamper_threshold' => self::$uuidTamperThreshold,
-            'ai_anomaly_threshold' => self::$aiAnomalyThreshold,
-            'blocked_ips_path' => self::BLOCKED_IPS_PATH,
-            'keyword_store_path' => self::DYNAMIC_KEYWORDS_PATH,
-            'header_min_score' => self::HEADER_MIN_SCORE,
-            'required_headers' => self::REQUIRED_HEADERS,
-        ]);
+        return new RuntimeConfig(
+            [
+                'exempt_paths' => self::$exemptPaths,
+                'known_paths' => self::$knownPaths,
+                'rate_limit_per_minute' => self::$rateLimitPerMinute,
+                'keyword_detection_threshold' => self::$keywordDetectionThreshold,
+                'uuid_tamper_threshold' => self::$uuidTamperThreshold,
+                'ai_anomaly_threshold' => self::$aiAnomalyThreshold,
+                'blocked_ips_path' => self::BLOCKED_IPS_PATH,
+                'keyword_store_path' => self::DYNAMIC_KEYWORDS_PATH,
+                'header_min_score' => self::HEADER_MIN_SCORE,
+                'required_headers' => self::REQUIRED_HEADERS,
+            ],
+            null,
+            true
+        );
     }
 }

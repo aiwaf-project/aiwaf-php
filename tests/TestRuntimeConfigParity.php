@@ -32,6 +32,8 @@ class TestRuntimeConfigParity extends TestCase
         $this->setEnv('AIWAF_GEO_ALLOW_COUNTRIES', 'US,CA');
         $this->setEnv('AIWAF_GEO_BLOCK_COUNTRIES', 'RU,CN');
         $this->setEnv('AIWAF_EXEMPT_IPS', '203.0.113.1,198.51.100.0/24');
+        $this->setEnv('AIWAF_RATE_LIMIT_BACKEND', 'db');
+        $this->setEnv('AIWAF_RATE_LIMIT_DB_PATH', '/tmp/aiwaf-rate-limit.sqlite');
 
         $config = new RuntimeConfig([], null, true);
 
@@ -42,6 +44,8 @@ class TestRuntimeConfigParity extends TestCase
         $this->assertSame(['US', 'CA'], $config->get('geo_block.allow_countries'));
         $this->assertSame(['RU', 'CN'], $config->get('geo_block.block_countries'));
         $this->assertSame(['203.0.113.1', '198.51.100.0/24'], $config->get('rate_limiting.exempt_ips'));
+        $this->assertSame('db', $config->get('rate_limiting.backend'));
+        $this->assertSame('/tmp/aiwaf-rate-limit.sqlite', $config->get('rate_limiting.db_path'));
     }
 
     public function testLoadsFromFileAndMerges(): void

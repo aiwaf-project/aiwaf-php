@@ -36,4 +36,11 @@ class TestRuntimeUtilsParity extends TestCase
         $this->assertTrue(RuntimeUtils::isProxyLikeIp('::1'));
         $this->assertTrue(RuntimeUtils::isProxyLikeIp('fe80::1'));
     }
+
+    public function testIsPrivateIpDoesNotTreatDocumentationRangesAsPrivate(): void
+    {
+        $this->assertFalse(RuntimeUtils::isPrivateIp('203.0.113.10'));
+        $this->assertFalse(RuntimeUtils::isPrivateIp('198.51.100.42'));
+        $this->assertTrue(RuntimeUtils::isPrivateIp('10.0.0.1'));
+    }
 }

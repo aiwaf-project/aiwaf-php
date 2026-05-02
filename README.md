@@ -266,9 +266,16 @@ These map directly into runtime keys:
 - `AIWAF_HEADER_QUALITY_THRESHOLD` -> `header_validation.quality_threshold`
 - `AIWAF_HEADER_EXEMPT_PATHS` -> `header_validation.exempt_paths` (comma list)
 - `AIWAF_RATE_LIMITING_ENABLED` -> `rate_limiting.enabled`
+- `AIWAF_RATE_LIMIT_BACKEND` -> `rate_limiting.backend` (`memory|db|redis|apcu`)
 - `AIWAF_RATE_MAX_REQUESTS` -> `rate_limiting.max_requests`
 - `AIWAF_RATE_WINDOW_SECONDS` -> `rate_limiting.window_seconds`
 - `AIWAF_EXEMPT_IPS` -> `rate_limiting.exempt_ips` (comma list)
+- `AIWAF_RATE_LIMIT_DB_PATH` -> `rate_limiting.db_path`
+- `AIWAF_RATE_LIMIT_REDIS_HOST` -> `rate_limiting.redis.host`
+- `AIWAF_RATE_LIMIT_REDIS_PORT` -> `rate_limiting.redis.port`
+- `AIWAF_RATE_LIMIT_REDIS_PASSWORD` -> `rate_limiting.redis.password`
+- `AIWAF_RATE_LIMIT_REDIS_DATABASE` -> `rate_limiting.redis.database`
+- `AIWAF_RATE_LIMIT_REDIS_TIMEOUT` -> `rate_limiting.redis.timeout`
 - `AIWAF_IP_KEYWORD_BLOCK_ENABLED` -> `ip_keyword_block.enabled`
 - `AIWAF_HONEYPOT_ENABLED` -> `honeypot.enabled`
 - `AIWAF_GEO_BLOCK_ENABLED` -> `geo_block.enabled`
@@ -307,6 +314,7 @@ Main defaults (from `src/Core/RuntimeConfig.php`):
 - `header_validation.block_suspicious=true`
 - `header_validation.quality_threshold=3`
 - `rate_limiting.enabled=true`
+- `rate_limiting.backend=memory`
 - `rate_limiting.max_requests=20`
 - `rate_limiting.window_seconds=10`
 - `ip_keyword_block.enabled=true`

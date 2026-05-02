@@ -1,6 +1,10 @@
 <?php
 namespace AIWAF;
 
+use AIWAF\Adapters\ApcuAdapter;
+use AIWAF\Adapters\DbAdapter;
+use AIWAF\Adapters\InMemoryAdapter;
+use AIWAF\Adapters\RedisAdapter;
 use AIWAF\Core\Constants;
 use AIWAF\Core\Exemptions;
 use AIWAF\Core\GeoIP;
@@ -29,6 +33,7 @@ class AIWAF
      * @var array<string, mixed>
      */
     private static array $lastTrainingTelemetry = [];
+    private static bool $rateLimiterConfigured = false;
 
     /**
      * Register a framework-specific path resolver used during training parity.
@@ -62,6 +67,7 @@ class AIWAF
     public static function protect()
     {
         $runtimeConfig = Config::toRuntimeConfig();
+        self::configureRateLimiter($runtimeConfig);
         $ip = Utils::getClientIp();
         $path = Utils::getRequestPath();
 
@@ -195,6 +201,80 @@ class AIWAF
                 exit;
             }
         }
+    }
+
+    private static function configureRateLimiter(RuntimeConfig $runtimeConfig): void
+    {
+        if (self::$rateLimiterConfigured || RateLimiter::hasDriver()) {
+            self::$rateLimiterConfigured = true;
+            return;
+        }
+
+        $backend = strtolower((string) $runtimeConfig->get('rate_limiting.backend', 'memory'));
+        if ($backend === '') {
+            $backend = 'memory';
+        }
+
+        try {
+            if ($backend === 'db') {
+                $dbPath = (string) $runtimeConfig->get('rate_limiting.db_path', dirname(__DIR__) . '/resources/rate_limit.sqlite');
+                if ($dbPath === '') {
+                    $dbPath = dirname(__DIR__) . '/resources/rate_limit.sqlite';
+                }
+                $dir = dirname($dbPath);
+                if (!is_dir($dir)) {
+                    mkdir($dir, 0777, true);
+                }
+                $pdo = new \PDO('sqlite:' . $dbPath);
+                $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+                $pdo->exec('CREATE TABLE IF NOT EXISTS ratelimit (ip TEXT NOT NULL, period TEXT NOT NULL, cnt INTEGER NOT NULL, PRIMARY KEY (ip, period))');
+                RateLimiter::initAdapter(new DbAdapter($pdo));
+                self::$rateLimiterConfigured = true;
+                return;
+            }
+
+            if ($backend === 'redis') {
+                if (!class_exists(\Redis::class)) {
+                    Utils::log('Rate limiting backend "redis" requested but ext-redis is unavailable; falling back to memory.');
+                } else {
+                    $host = (string) $runtimeConfig->get('rate_limiting.redis.host', '127.0.0.1');
+                    $port = (int) $runtimeConfig->get('rate_limiting.redis.port', 6379);
+                    $timeout = (float) $runtimeConfig->get('rate_limiting.redis.timeout', 1.5);
+                    $password = $runtimeConfig->get('rate_limiting.redis.password', null);
+                    $database = (int) $runtimeConfig->get('rate_limiting.redis.database', 0);
+
+                    $redis = new \Redis();
+                    $connected = $redis->connect($host, $port, $timeout);
+                    if (!$connected) {
+                        throw new \RuntimeException('Unable to connect to Redis for rate limiting.');
+                    }
+                    if (is_string($password) && $password !== '') {
+                        $redis->auth($password);
+                    }
+                    if ($database > 0) {
+                        $redis->select($database);
+                    }
+                    RateLimiter::initAdapter(new RedisAdapter($redis));
+                    self::$rateLimiterConfigured = true;
+                    return;
+                }
+            }
+
+            if ($backend === 'apcu') {
+                if (!function_exists('apcu_enabled') || !apcu_enabled()) {
+                    Utils::log('Rate limiting backend "apcu" requested but APCu is unavailable/disabled; falling back to memory.');
+                } else {
+                    RateLimiter::initAdapter(new ApcuAdapter());
+                    self::$rateLimiterConfigured = true;
+                    return;
+                }
+            }
+        } catch (\Throwable $e) {
+            Utils::log('Rate limiting backend init failed (' . $backend . '): ' . $e->getMessage() . '. Falling back to memory.');
+        }
+
+        RateLimiter::initAdapter(new InMemoryAdapter());
+        self::$rateLimiterConfigured = true;
     }
 
     private static function extractRequestFeatures(): array

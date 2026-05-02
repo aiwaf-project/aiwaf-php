@@ -88,9 +88,17 @@ final class RuntimeConfig
             'AIWAF_HEADER_QUALITY_THRESHOLD' => ['header_validation.quality_threshold', 'int'],
             'AIWAF_HEADER_EXEMPT_PATHS' => ['header_validation.exempt_paths', 'list'],
             'AIWAF_RATE_LIMITING_ENABLED' => ['rate_limiting.enabled', 'bool'],
+            'AIWAF_RATE_LIMIT_BACKEND' => ['rate_limiting.backend', 'string'],
             'AIWAF_RATE_MAX_REQUESTS' => ['rate_limiting.max_requests', 'int'],
             'AIWAF_RATE_WINDOW_SECONDS' => ['rate_limiting.window_seconds', 'int'],
             'AIWAF_EXEMPT_IPS' => ['rate_limiting.exempt_ips', 'list'],
+            'AIWAF_RATE_LIMIT_DB_PATH' => ['rate_limiting.db_path', 'string'],
+            'AIWAF_RATE_LIMIT_DB' => ['rate_limiting.db_path', 'string'],
+            'AIWAF_RATE_LIMIT_REDIS_HOST' => ['rate_limiting.redis.host', 'string'],
+            'AIWAF_RATE_LIMIT_REDIS_PORT' => ['rate_limiting.redis.port', 'int'],
+            'AIWAF_RATE_LIMIT_REDIS_PASSWORD' => ['rate_limiting.redis.password', 'string'],
+            'AIWAF_RATE_LIMIT_REDIS_DATABASE' => ['rate_limiting.redis.database', 'int'],
+            'AIWAF_RATE_LIMIT_REDIS_TIMEOUT' => ['rate_limiting.redis.timeout', 'float'],
             'AIWAF_IP_KEYWORD_BLOCK_ENABLED' => ['ip_keyword_block.enabled', 'bool'],
             'AIWAF_HONEYPOT_ENABLED' => ['honeypot.enabled', 'bool'],
             'AIWAF_GEO_BLOCK_ENABLED' => ['geo_block.enabled', 'bool'],
@@ -129,6 +137,11 @@ final class RuntimeConfig
         $backend = (string) $this->get('storage.backend', '');
         if (!in_array($backend, ['memory', 'file', 'csv', 'db'], true)) {
             $errors[] = 'Invalid storage backend: ' . $backend;
+        }
+
+        $rateBackend = strtolower((string) $this->get('rate_limiting.backend', 'memory'));
+        if (!in_array($rateBackend, ['memory', 'db', 'redis', 'apcu'], true)) {
+            $errors[] = 'Invalid rate limiting backend: ' . $rateBackend;
         }
 
         $checks = [
@@ -203,10 +216,19 @@ final class RuntimeConfig
             ],
             'rate_limiting' => [
                 'enabled' => true,
+                'backend' => 'memory',
                 'max_requests' => 20,
                 'window_seconds' => 10,
                 'flood_threshold' => 40,
                 'exempt_ips' => [],
+                'db_path' => dirname(__DIR__, 2) . '/resources/rate_limit.sqlite',
+                'redis' => [
+                    'host' => '127.0.0.1',
+                    'port' => 6379,
+                    'password' => null,
+                    'database' => 0,
+                    'timeout' => 1.5,
+                ],
             ],
             'ip_keyword_block' => [
                 'enabled' => true,

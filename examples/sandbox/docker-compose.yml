@@ -11,6 +11,8 @@ services:
       AIWAF_ACCESS_LOG: /workspace/resources/access.log
       AIWAF_MIN_AI_LOGS: "10000"
       AIWAF_DISABLE_AI: "true"
+      AIWAF_RATE_LIMIT_BACKEND: db
+      AIWAF_RATE_LIMIT_DB_PATH: /workspace/resources/rate_limit.sqlite
     depends_on:
       juice:
         condition: service_started
@@ -29,6 +31,8 @@ services:
       AIWAF_ACCESS_LOG: /workspace/resources/access.log
       AIWAF_MIN_AI_LOGS: "10000"
       AIWAF_DISABLE_AI: "true"
+      AIWAF_RATE_LIMIT_BACKEND: db
+      AIWAF_RATE_LIMIT_DB_PATH: /workspace/resources/rate_limit.sqlite
     depends_on:
       juice:
         condition: service_started
@@ -47,6 +51,8 @@ services:
       AIWAF_ACCESS_LOG: /workspace/resources/access.log
       AIWAF_MIN_AI_LOGS: "10000"
       AIWAF_DISABLE_AI: "true"
+      AIWAF_RATE_LIMIT_BACKEND: db
+      AIWAF_RATE_LIMIT_DB_PATH: /workspace/resources/rate_limit.sqlite
     depends_on:
       juice:
         condition: service_started

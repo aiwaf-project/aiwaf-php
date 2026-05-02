@@ -1,5 +1,6 @@
 {
     "name": "aayushgauba/aiwaf",
+    "version": "1.1.0",
     "description": "Adaptive Intelligent Web Application Firewall for PHP",
     "type": "library",
     "license": "MIT",
